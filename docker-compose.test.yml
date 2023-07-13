@@ -1,0 +1,42 @@
+version: '4'
+services:
+  emails-service:
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: 3003
+      LOG_LEVEL: debug
+      QUEUE_URL: amqp://user:pass@queue:5672
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: sh -c "sleep 15 && npm run test:ci"
+    ports:
+      - 3003:3003
+    expose:
+      - 3003
+    links:
+      - queue
+    depends_on:
+      - queue
+    restart: always
+    networks:
+      - default
+  queue:
+    image: bitnami/rabbitmq:latest
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=pass
+    ports:
+      - 5672:5672
+      - 15672:15672
+    expose:
+      - 5672
+      - 15672
+    restart: always
+    networks:
+      - default
+
+networks:
+  default:
+    driver: bridge
